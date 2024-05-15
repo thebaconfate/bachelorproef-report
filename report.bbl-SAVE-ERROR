@@ -1,0 +1,89 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{apa/apasortcite//global/global}
+    \entry{cloudcomputingenergycrisis}{online}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=fefab4be4757390829849b8dd19cd319}{%
+           family={Pesce},
+           familyi={P\bibinitperiod},
+           given={Mark},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{fullhash}{fefab4be4757390829849b8dd19cd319}
+      \strng{bibnamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authorbibnamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authornamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authorfullhash}{fefab4be4757390829849b8dd19cd319}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cloud Computing’s Coming Energy Crisis}
+      \field{year}{2021}
+      \verb{urlraw}
+      \verb https://spectrum.ieee.org/cloud-computings-coming-energy-crisis
+      \endverb
+      \verb{url}
+      \verb https://spectrum.ieee.org/cloud-computings-coming-energy-crisis
+      \endverb
+    \endentry
+  \enddatalist
+  \datalist[entry]{apa/global//global/global}
+    \entry{cloudcomputingenergycrisis}{online}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=fefab4be4757390829849b8dd19cd319}{%
+           family={Pesce},
+           familyi={P\bibinitperiod},
+           given={Mark},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{fullhash}{fefab4be4757390829849b8dd19cd319}
+      \strng{bibnamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authorbibnamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authornamehash}{fefab4be4757390829849b8dd19cd319}
+      \strng{authorfullhash}{fefab4be4757390829849b8dd19cd319}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cloud Computing’s Coming Energy Crisis}
+      \field{year}{2021}
+      \verb{urlraw}
+      \verb https://spectrum.ieee.org/cloud-computings-coming-energy-crisis
+      \endverb
+      \verb{url}
+      \verb https://spectrum.ieee.org/cloud-computings-coming-energy-crisis
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
