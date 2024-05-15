@@ -7,7 +7,7 @@
 \usepackage[english]{babel}
 
 % Some highly suggested packages, please read their manuals.
-
+\usepackage{hyperref}
 \usepackage{float}
 \usepackage{cleveref}
 \usepackage[natbib,style=apa]{biblatex}
@@ -33,33 +33,23 @@
 \section{Introduction}
 In a world of electronics and machines where power consumption is always increasing, we must do our best to optimize power consumption. This because electricity is expensive and while there is research being done to make energy generation more efficient, we can still do our part in optimizing the energy consumption to put less strain on the power generation. In the world of distributed computing, according to \cite{cloudcomputingenergycrisis} cloud computing takes 1\% of worldwide energy consumption. While this may not seem like much, it is still a significant amount of energy, and we want to do our part to decrease this percentage. While the end goal is to reduce the energy consumption for distributed programs, or more specifically IoT systems, where the generated data gets aggregated on the server in the cloud. We will be looking at reducing the energy consumption of the network traffic caused by transmitting data from the IoT devices to the cloud.
 
-In IoT systems, the IoT devices, or sensors, are responsible for generating data. This data is then sent to the server for processing. Naturally this means that there is extra network traffic caused by the IoT devices. \cite{differentnetworkneedsiot} predicted that \enquote{IoT devices will account for 50\% of all networked devices by 2023}. This also means that there is an increase in energy consumption due to the necessary infrastructure required for the increase in data volume, as stated in \cite{datavolumeeffects}. What if we could reduce the network traffic by applying the edge-computing principle to the IoT systems? Meaning that prior to the IoT device sending the data to the cloud, it processes it locally first and then sends the preprocessed data to the cloud. This would mean that not all the data has to be sent but rather a subset of it. Logically this should reduce the total network traffic and the required energy. But what if this is not the optimal configuration? What if it is more beneficial to have some parts processed on the IoT devices and some part processed on the server? Or what if it is more beneficial to have some sensors process the data and then send it to the cloud and other sensors to send the data directly to the cloud? To try these different configurations we require a tool that allows us to easily deploy the distributed system and easily change the configuration of the deployment as well as configure where what gets processed. We will be focusing on this deployment tool in this thesis. For now our goals will be:
+In IoT systems, the IoT devices, or sensors, are responsible for generating data. This data is then sent to the server for processing. Naturally this means that there is extra network traffic caused by the IoT devices. \cite{differentnetworkneedsiot} predicted that \enquote{IoT devices will account for 50\% of all networked devices by 2023}. This also means that there is an increase in energy consumption due to the necessary infrastructure required for the increase in data volume, as stated in \cite{datavolumeeffects}. What if we could reduce the network traffic by applying the edge-computing principle to the IoT systems? Meaning that prior to the IoT device sending the data to the cloud, it processes it locally first and then sends the preprocessed data to the cloud. This would mean that not all the data has to be sent but rather a subset of it. Logically this should reduce the total network traffic and the required energy. But what if this is not the optimal configuration? What if it is more beneficial to have some parts processed on the IoT devices and some part processed on the server? Or what if it is more beneficial to have some sensors process the data and then send it to the cloud and other sensors to send the data directly to the cloud? To try these different configurations we require a tool that allows us to easily deploy the distributed system and easily change the configuration of the deployment as well as configure where what gets processed. We will be focusing on this deployment tool in this thesis. We will start with the following goals:
 \begin{enumerate}
     \item Easily deploy the distributed system
     \item Easily allow us to change the configuration of the deployment
     \item Easily allow us to declare which data gets processed where
 \end{enumerate}
 \subsection{Distributed computing}
-To start with distributed computing, or our IoT systems we have to look for a suitable distributed computing paradigm that allows our IoT devices to be deployed from the cloud without much manual configuration. We have several options, but not limited to:
+To start with distributed computing, or our IoT systems we have to look for a suitable distributed computing paradigm that allows our system to be deployed from the cloud without much manual configuration, yet is able to do what we require it to do. We have several options, such as:
 \begin{enumerate}
-    \item Message Passing Interface (MPI) as presented in \cite{MPI}
-    \item Remote Procedure Call (RPC) as presented in \cite{RPC}
-    \item Shared Memory Model as presented in \cite{SMM}
-    \item The Actor Model as presented in \cite{ActorModel}
-    \item MapReduce
-    \item Bulk Synchroneous Parallel (BSP)
+    \item Message Passing Interface (MPI) as described in \cite{MPI}
+    \item Remote Procedure Call (RPC) as described in \cite{RPC}
+    \item Shared Memory Model as described in \cite{SMM}
+    \item The Actor Model as described in \cite{ActorModel}
     \item Publish/Subscribe (Pub/Sub)
 \end{enumerate}
+While each paradigm has their strengths and drawbacks, we will be using the Actor Model. Primarily because its modularity. Each actor encapsulates its state and behavior, which makes it a prime candidate to encapsulate the behavior of our IoT devices. Furthermore, using the Actor Model we can split our data processing pipeline into segments, each segment being captured by a different Actor. This allows us to easily move part of the data processing pipeline to the IoT devices or back to the server. This satisfies one of our previously stated goals. Other than the modularity, we also choose it for its maintainability. Since each part of the system is encapsulated in an Actor, we can easily change the behavior of parts of the system, instead of having to change our entire system. Another reason is scalability. We are able to distribute actors across different systems and machines. Which makes it perfect for IoT systems. Fault-tolerance makes it easier to contain errors and within individual actors and not propagate this to the entire system. The asynchronous nature of the Actor Model allows us to sparely use resources as needed, which will presumably reduce the required energy of the system. Lastly, through the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
 
-
-First we need to get acquainted with the system and its environment that we will be creating a tool for. The system is an actor-based distributed system that runs actors on different machines. For the time being it runs actors on the sensors and server. The actors on the sensor are responsible for sending data to the server actors, which in turn are responsible for processing and storing the data.
-
-Furthermore, our language of implementation will be Python. This because the company that is involved in the project already has most of the infrastructure in Python and thus tasked us with creating the tool in Python as well.
-
-\subsection{Goals}
-The goal of this bachelor thesis is to create a tool that allows us to statically deploy actors at pre-configured locations. We want to try the configuration of moving part of the processing to the sensors but would also like to try other configurations such as having some preprocessing done on some sensors, and some preprocessing done on the server. We want to be able to easily change the configuration and see the effects of the changes on the network traffic and energy consumption. Note that monitoring the network traffic and energy consumption is outside the scope of this thesis. We will only be focusing on the static deployment of the actors.
-
-\section{Conclusion}
 
 \printbibliography
 \end{document}
