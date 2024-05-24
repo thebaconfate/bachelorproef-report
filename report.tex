@@ -59,12 +59,37 @@ While it is technically possible to achieve modularity in MPI, RPC, and the Shar
 
 Other than the modularity, we also choose it for its maintainability. Since each part of the system is encapsulated in an Actor, we can easily change the behavior of parts of the system, instead of having to change our entire system. Another reason is scalability. We are able to distribute actors across different systems and machines. Which makes it perfect for moving parts of the data processing. Fault-tolerance makes it easier to contain errors and within individual actors and not propagate this to the entire system. The asynchronous nature of the Actor Model allows us to sparely use resources as needed, which will presumably reduce the required energy of the system, helping with the energy optimization. Lastly, through the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
 \subsection{Programming language of implementation}
-The next step is to choose a programming language that supports the Actor Model. However, before listing the programming languages that support the Actor model, we need to consider a few things first.
+The next step is to choose a programming language that supports the Actor Model. However, before listing the programming languages that support the Actor model, we need to consider a few things first. We want our tool to be maintainable. This means that choosing a programming language that is popular and has a large community is important. Furthermore, when processing data, companies tend to analyze the data, and perform data science on it. This means that ideally we should choose a programming language that is also used in data science, so that users of Stork can stay in the same language. Lastly but more importantly, we should choose a programming language that has libraries or technologies that support the Actor Model. This is important because otherwise we have to make our own implementation of the Actor Model, which is not ideal, considering there are already several implementations available.
 
+A quick google search yields the following programming languages that support the Actor Model:
+\begin{enumerate}
+    \item Scala with its Akka library
+    \item Java with its Akka library
+    \item Erlang, where the Actor Model is built into the language
+    \item Elixir, where the Actor model is built into the language, and based on Erlang, Open telecom platform (OTP)
+    \item JavaScript with its js.Actor library
+    \item Python with its Pykka and Thespianpy libraries
+    \item C\# with its Akka.NET library
+    \item Rust with its Actix library
+\end{enumerate}
 
-There are several programming languages that support the Actor Model, such as:
-
-
-
+In terms of popularity, according to \cite{stackoverflowsurvey}, they are ranked as follows\footnote{TypeScript is emitted since it uses JavaScript libraries}:
+\begin{enumerate}
+    \item JavaScript
+    \item Python
+    \item Java
+    \item C\#
+    \item Rust
+    \item Scala
+    \item Elixir
+    \item Erlang
+\end{enumerate}
+With the last three being used by less than \(5\%\) of the respondents, and the top two being used by roughly \(49\%-63\%\) of respondents, we can focus on the top two. To stay in the same programming language that is often used by data scientists, we choose Python. This because according to \cite{datasciencelanguage}, Python is the most popular language for data science, and while JavaScript is also used for data science, it does not offer nearly as much data science libraries as Python does.
+\subsection{Technologies and libraries}
+As mentioned when choosing the programming language of implementation, Python offers two Actor Model libraries. Pykka and Thespianpy. Setting Pykka and thespian next to each other and comparing them yields the following results:
+\subsubsection{Pykka}
+Quoting the documentation of the library: \enquote{Pykka is a Python implementation of the actor model. The actor model introduces some simple rules to control the sharing of state and cooperation between execution units, which makes it easier to build concurrent applications.} However, reading further down in the documentation we see that Pykka has some shortcomings, as it does not support linking actors, supervisors, or supervisor groups. It does not support communicating with actors running on other hosts, which is a requirement for our tool. Lastly, it does not come with a set of predefined message router, which would mean that we have to implement this ourselves. Notably it does have \(~1200\) stars on Github, which comparing it to Thespianpy, is more.
+\subsubsection{Thespianpy}
+The documentation states that: \enquote{Thespian is a Python library providing a framework for developing concurrent, distributed, fault tolerant applications. It is built on the Actor Model which allows applications to be written as a group of independently executing but cooperating "Actors" which communicate via messages. These Actors run within the Actor System provided by the Thespian library.} Since all Actors run independently within the Actor System, we can create concurrent applications. Thespianpy also allows us to run Actors independently anywhere. This means that we can have multiple servers running Thespianpy and an Actor can be run in any of these systems. Thespianpy will handle the communication between the Actors and the management process of distributing the Actors across the system. Which is something we would have to implement ourselves if we were to user Pykka.
 \printbibliography
 \end{document}
