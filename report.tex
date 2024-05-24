@@ -59,7 +59,10 @@ While it is technically possible to achieve modularity in MPI, RPC, and the Shar
 
 Other than the modularity, we also choose it for its maintainability. Since each part of the system is encapsulated in an Actor, we can easily change the behavior of parts of the system, instead of having to change our entire system. Another reason is scalability. We are able to distribute actors across different systems and machines. Which makes it perfect for moving parts of the data processing. Fault-tolerance makes it easier to contain errors and within individual actors and not propagate this to the entire system. The asynchronous nature of the Actor Model allows us to sparely use resources as needed, which will presumably reduce the required energy of the system, helping with the energy optimization. Lastly, through the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
 \subsection{Programming language of implementation}
-The next step is to choose a programming language that supports the Actor Model. There are several programming languages that support the Actor Model, such as:
+The next step is to choose a programming language that supports the Actor Model. However, before listing the programming languages that support the Actor model, we need to consider a few things first. 
+
+
+There are several programming languages that support the Actor Model, such as:
 
 
 
