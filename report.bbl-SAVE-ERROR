@@ -51,6 +51,38 @@
       \verb https://blogs.cisco.com/networking/iot-and-the-network-what-is-the-future
       \endverb
     \endentry
+    \entry{datasciencelanguage}{online}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=25d2cb3f82ed6286b204c576e66d64b0}{%
+           family={Gupta},
+           familyi={G\bibinitperiod},
+           given={Sakshi},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{fullhash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{bibnamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authorbibnamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authornamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authorfullhash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Springboard}
+      \field{title}{11 Best Programming Languages for Data Science in 2024}
+      \field{year}{2022}
+      \verb{urlraw}
+      \verb https://www.springboard.com/blog/data-science/best-language-beginner-data-scientists-learn/
+      \endverb
+      \verb{url}
+      \verb https://www.springboard.com/blog/data-science/best-language-beginner-data-scientists-learn/
+      \endverb
+    \endentry
     \entry{SMM}{article}{}
       \name{author}{3}{}{%
         {{un=0,uniquepart=base,hash=dec3948f0497f5447bae5c2365b87e8f}{%
@@ -168,6 +200,48 @@
       \field{year}{2021}
       \verb{doi}
       \verb https://doi.org/10.3390/s22010255
+      \endverb
+    \endentry
+    \entry{PubSub}{online}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=4a6f82b1a7b1ccdf8607a8f7a4feae09}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Wei-Tsung},
+           giveni={W\bibinithyphendelim T\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=125d741c53296b4e0cf0f21abdf4e7d3}{%
+           family={Wolski},
+           familyi={W\bibinitperiod},
+           given={Rich},
+           giveni={R\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=5c1fe64b50a40b3466a5c059cc49e56a}{%
+           family={Krintz},
+           familyi={K\bibinitperiod},
+           given={Chandra},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5fede3e330dddf2c270dd4eb0dd5f1c3}
+      \strng{fullhash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{bibnamehash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{authorbibnamehash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{authornamehash}{5fede3e330dddf2c270dd4eb0dd5f1c3}
+      \strng{authorfullhash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{labeldatesource}{nodate}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{University of California, Santa Barbara}
+      \field{title}{A Programmable and Reliable Publish/Subscribe System for Multi-Tier IoT}
+      \verb{urlraw}
+      \verb https://sites.cs.ucsb.edu/~ckrintz/papers/canal21.pdf
+      \endverb
+      \verb{url}
+      \verb https://sites.cs.ucsb.edu/~ckrintz/papers/canal21.pdf
       \endverb
     \endentry
     \entry{MPI}{article}{}
@@ -307,6 +381,22 @@
       \field{note}{https://ourworldindata.org/energy-mix}
       \field{title}{Energy Mix}
       \field{year}{2020}
+    \endentry
+    \entry{stackoverflowsurvey}{online}{}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Stack Overflow}
+      \field{title}{Stack Overflow Developer Survey}
+      \field{year}{2023}
+      \verb{urlraw}
+      \verb https://survey.stackoverflow.co/2023/
+      \endverb
+      \verb{url}
+      \verb https://survey.stackoverflow.co/2023/
+      \endverb
     \endentry
     \entry{RPC}{article}{}
       \name{author}{2}{}{%
@@ -395,6 +485,38 @@
       \verb https://blogs.cisco.com/networking/iot-and-the-network-what-is-the-future
       \endverb
     \endentry
+    \entry{datasciencelanguage}{online}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=25d2cb3f82ed6286b204c576e66d64b0}{%
+           family={Gupta},
+           familyi={G\bibinitperiod},
+           given={Sakshi},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{fullhash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{bibnamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authorbibnamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authornamehash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \strng{authorfullhash}{25d2cb3f82ed6286b204c576e66d64b0}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Springboard}
+      \field{title}{11 Best Programming Languages for Data Science in 2024}
+      \field{year}{2022}
+      \verb{urlraw}
+      \verb https://www.springboard.com/blog/data-science/best-language-beginner-data-scientists-learn/
+      \endverb
+      \verb{url}
+      \verb https://www.springboard.com/blog/data-science/best-language-beginner-data-scientists-learn/
+      \endverb
+    \endentry
     \entry{SMM}{article}{}
       \name{author}{3}{}{%
         {{un=0,uniquepart=base,hash=dec3948f0497f5447bae5c2365b87e8f}{%
@@ -512,6 +634,48 @@
       \field{year}{2021}
       \verb{doi}
       \verb https://doi.org/10.3390/s22010255
+      \endverb
+    \endentry
+    \entry{PubSub}{online}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=4a6f82b1a7b1ccdf8607a8f7a4feae09}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Wei-Tsung},
+           giveni={W\bibinithyphendelim T\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=125d741c53296b4e0cf0f21abdf4e7d3}{%
+           family={Wolski},
+           familyi={W\bibinitperiod},
+           given={Rich},
+           giveni={R\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=5c1fe64b50a40b3466a5c059cc49e56a}{%
+           family={Krintz},
+           familyi={K\bibinitperiod},
+           given={Chandra},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5fede3e330dddf2c270dd4eb0dd5f1c3}
+      \strng{fullhash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{bibnamehash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{authorbibnamehash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \strng{authornamehash}{5fede3e330dddf2c270dd4eb0dd5f1c3}
+      \strng{authorfullhash}{8661ddd39fd4cd2824d9fd2cb7153f0b}
+      \field{sortinit}{L}
+      \field{sortinithash}{7c47d417cecb1f4bd38d1825c427a61a}
+      \field{labeldatesource}{nodate}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{University of California, Santa Barbara}
+      \field{title}{A Programmable and Reliable Publish/Subscribe System for Multi-Tier IoT}
+      \verb{urlraw}
+      \verb https://sites.cs.ucsb.edu/~ckrintz/papers/canal21.pdf
+      \endverb
+      \verb{url}
+      \verb https://sites.cs.ucsb.edu/~ckrintz/papers/canal21.pdf
       \endverb
     \endentry
     \entry{MPI}{article}{}
@@ -651,6 +815,22 @@
       \field{note}{https://ourworldindata.org/energy-mix}
       \field{title}{Energy Mix}
       \field{year}{2020}
+    \endentry
+    \entry{stackoverflowsurvey}{online}{}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Stack Overflow}
+      \field{title}{Stack Overflow Developer Survey}
+      \field{year}{2023}
+      \verb{urlraw}
+      \verb https://survey.stackoverflow.co/2023/
+      \endverb
+      \verb{url}
+      \verb https://survey.stackoverflow.co/2023/
+      \endverb
     \endentry
     \entry{RPC}{article}{}
       \name{author}{2}{}{%

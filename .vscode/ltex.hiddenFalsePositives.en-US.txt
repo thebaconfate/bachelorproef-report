@@ -1,0 +1,1 @@
+{"rule":"SCENT_SENT","sentence":"^\\QThis because if we wanted the remote Actor to be able to spawn Actors, we would first have to implement a method in that Actor that would allow the Actor to interpret the sent message that tells it to spawn an Actor and send the created reference back.\\E$"}
