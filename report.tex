@@ -93,7 +93,7 @@ Quoting the documentation of the library: \enquote{Pykka is a Python implementat
 The documentation states that: \enquote{Thespian is a Python library providing a framework for developing concurrent, distributed, fault-tolerant applications. It is built on the Actor Model which allows applications to be written as a group of independently executing but cooperating "Actors" which communicate via messages. These Actors run within the Actor System provided by the Thespian library.} More importantly, Thespianpy allows us to run Thespian on different hosts, while internally handling the messaging between actors, providing an out-of-the-box solution for Actor communication between different hosts. This means that when using the Thespian library, we do not have to implement the communication between actors running on different hosts. It also means that we can user the built-in communication to declare where which data gets processed. However, it only has \(\approx300\), which is significantly less than Pykka.
 \subsubsection{Our verdict}
 While Pykka is more popular than Thespianpy, it does not support communication between actors running on different hosts. As this is a crucial feature for distributed computing, we choose Thespianpy.
-\section{Design}
+\section{A deep dive into Thespianpy}
 Now that we have chosen the technologies and libraries that we will be using to build Stork, we first need to design the tool to see if we need anything else. Since this tool will be built using Thespian, we will heavily rely on its provided features. This gives rise to a few questions:
 \begin{enumerate}
     \item How do we deploy the system using Thespianpy?
