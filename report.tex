@@ -10,7 +10,7 @@
 \usepackage{hyperref}
 \usepackage{float}
 \usepackage{cleveref}
-\usepackage[natbib, style=apa]{biblatex} %perhaps use ieee style? 
+\usepackage[natbib, style=ieee]{biblatex} %perhaps use ieee style? 
 \usepackage{csquotes}
 \addbibresource{bibliography.bib}
 \setlength\parskip{\baselineskip}
@@ -21,7 +21,7 @@
 \author{Gérard Lichtert}
 \date{\today}
 \promotors{Promotors: Prof.\ Dr.\ Joeri de Koster and Prof.\ Dr.\ Wolfgang de Meuter. \and Advisor: Mathijs Saey}
-\faculty{Sciences and bioengineering sciences}
+\faculty{Sciences and Bio-Engineering sciences}
 
 \begin{document}
 \maketitle
@@ -31,9 +31,9 @@
 
 
 \section{Introduction}
-In a world of electronics and machines where power consumption is always increasing, optimizing power consumption is becoming increasingly important. While electricity is expensive, the main reason lies in climate change. According to \cite{owid-energy-mix}, the majority of our electricity production still comes from non-renewable sources, such as coal, oil, and gas. These sources produce a lot of CO\textsuperscript{2}, and other greenhouse gases, which are the main contributors to climate change. While there is research being done to optimize energy generation, optimizing power consumption is becoming increasingly important. This means that we as programmers can also play a role in optimizing our programs to consume less energy. In the world of computing, according to \cite{cloudcomputingenergycrisis} cloud computing takes 1\% of worldwide energy consumption. While this may not seem like much, it is still a significant amount of energy.
+In a world of electronics and machines where power consumption is always increasing, optimizing power consumption is becoming increasingly important. While electricity is expensive, the main reason lies in climate change. This because the majority of our electricity production still comes from non-renewable sources, such as coal, oil, and gas \cite{owid-energy-mix}. These sources produce a lot of CO\textsuperscript{2}, and other greenhouse gases, which are the main contributors to climate change. While there is research being done to optimize energy generation, optimizing power consumption is becoming increasingly important. This means that we as programmers can also play a role in optimizing our programs to consume less energy.
 
-Computing like most electronics, require electricity to function, however when computers communicate with each other they also have to send data, or make requests through the Internet. This leads to a very high network usage, since in today's world, we are unequivocally connected with each other. Furthermore, the amount of devices using the internet keeps growing, which leads to even more network usage. Higher network usage also leads to higher energy consumption, which leads to a higher carbon footprint, as stated in \cite{RATHEESH}. \cite{datavolumeeffects} states that there is also an increase in energy consumption due to the infrastructure required for the increase in data volume. To reduce the network load we need to look at the data that is being sent through the network and if we can reduce it.
+In the world of computing, cloud computing is responsible for 1\% of the worldwide energy consumption \cite{cloudcomputingenergycrisis}. To make use of the cloud, we do not only need electricity to power the devices that provide cloud computing but also electricity to power the Internet, which also plays a significant role in the energy consumption. This because the Internet is the backbone of most, if not all, communication between devices and applications. The amount connected devices and applications keep growing, which leads to a higher network usage. Consequently, higher network usage also leads to higher energy consumption, which leads to a higher carbon footprint \cite{RATHEESH}. Higher network usage also requires better infrastructure to handle the increased data volume, which in turn also requires more energy \cite{datavolumeeffects}. To reduce the network load we need to look at the data that is being sent through the network and if we can reduce it.
 
 Data is usually transported through the network for a few reasons. Sometimes it is to send data to a device to update local data, like a chat message that needs to be added to the chat, or a new email that needs to be downloaded. While often compressed, the data is used as-is, and thus cannot be further reduced. Other times, however, data is sent to be processed. This can potentially be optimized by applying the edge-computing principle. This means that (part of) the data that is originally meant for processing is processed locally first, potentially reducing the amount of data that needs to be sent after preprocessing it. Logically, if the data is smaller after preprocessing, the network load should be reduced, and consequently the energy consumption. However, for a certain set of devices it could be optimal to pre-process the complete set of data prior to sending it over the network. While for another set of devices it could be optimal to send the data directly to the server. Sometimes the optimal configuration could be a combination of the two. This gives rise to the question of how we can easily declare where which data gets processed.
 
