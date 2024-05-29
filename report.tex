@@ -50,7 +50,7 @@ To start with distributed computing, we have to look for a suitable distributed 
     \item Message Passing Interface (MPI)\cite{MPI}
     \item Remote Procedure Call (RPC)\cite{RPC}
     \item Shared Memory Model\cite{SMM}
-    \item The Actor Model as described in \cite{ActorModel}
+    \item The Actor Model\cite{ActorModel}
     \item Publish/Subscribe (Pub/Sub) as described in \cite{PubSub}
 \end{enumerate}
 While each paradigm has their strengths and drawbacks, we will be using the Actor Model. Primarily because its modularity. Each actor encapsulates its state and behavior, which makes it a prime candidate to encapsulate the behavior of the parts that process certain parts of data. This allows us to easily move part of the data processing pipeline from one device to another. Which helps with our goal of declaring where which data gets processed. Interestingly, it can also encapsulate the behavior of IoT devices, which according to \cite{differentnetworkneedsiot} will account for 50\% of all networked devices by 2023. Seeing as IoT devices are becoming increasingly important, they should be a factor in our choice of distributed computing paradigm.
