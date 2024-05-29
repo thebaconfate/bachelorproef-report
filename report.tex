@@ -37,13 +37,9 @@ In the world of computing, cloud computing is responsible for 1\% of the worldwi
 
 Data is usually transported through the network for a few reasons. Sometimes it is to send data to a device to update local data, like a chat message that needs to be added to the chat, or a new email that needs to be downloaded. While often compressed, the data is used as-is, and thus cannot be further reduced. Other times, however, data is sent to be processed. This can potentially be optimized by applying the edge-computing principle. This means that (part of) the data that is originally meant for processing is processed locally first, potentially reducing the amount of data that needs to be sent after preprocessing it. Logically, the network load, and consequently the energy consumption, should be reduced. However, for a certain set of devices or applications, it could be optimal to pre-process the complete set of data prior to sending it over the network, while for another set of devices or applications, it could be optimal to send the data directly to the server. Sometimes, however, the optimal configuration could be a combination of the two. This gives rise to the question of how we can declare how certain data is processed, and where it is processed and on top of that change the where without much manual intervention. Moreover, we want this to be available in Python because it could be interesting for further data science\cite{datasciencelanguage} or AI applications, in which the language is known to be very popular. For this purpose, we introduce Stork.
 
-Stork is a distributed computing deployment tool, written in Python that makes it possible to deploy distributed systems in a declarative way. It allows us to change the deployment configuration as well as declare where which data gets processed. It does so by delivering the correct parts of the program to the correct devices. Hence, the name Stork.
-
-We will know that the tool is successful if we can use the tool as a library to deploy a distributed system without manual intervention. Furthermore, the tool should allow us to change the configuration of the deployment, and declare where which data gets processed. Lastly the data must correctly be processed on the declared devices.
+Stork is a distributed computing deployment tool, written in Python that makes it possible to deploy distributed systems and try out different configurations regarding these systems. More concretely, it allows us to initialize the deployment of a distributed system, change the configuration of where certain parts of the distributed system are deployed in a declarative way and reverse the deployment.
 \section{Background}
-To start building Stork we need to look at the goals that our tool should achieve. As mentioned in the introduction, we require a tool that allows us to declare where which data gets processed. This means that we need to be able to deploy parts of our program to different devices. Consequently, this means that our tool needs to work in the context of distributed systems. For this we need to choose a distributed computing paradigm that allows us to deploy our system in a distributed way, as well as change where parts of our programs reside.
-Next, we need to choose a programming language of implementation, while keeping several factors in mind, such as, popularity, the use case of the programming language and the available libraries or technologies that exist in the language for our chosen paradigm.
-After choosing our programming language, we need to look at the available technologies and libraries in the programming language and choose the one(s) that best fit our needs. It could happen that we need other libraries or technologies to support the ones we choose but, we will cross that bridge when we get there.
+Before we discuss Stork, we need to discuss the goals that Stork should achieve and how. As mentioned in the introduction, we require a tool that allows us to declare where which data gets processed. This means that we need to be able to deploy parts of our program to different devices. Consequently, this means that our tool needs to work in the context of distributed systems. For this we need to choose a distributed computing paradigm that allows us to deploy our system in a distributed way, as well as change where parts of our programs reside. Next, we need to look at the available technologies and libraries in Python and choose the one(s) that best fit our needs. Let us begin with the distributed computing paradigm.
 \subsection{Distributed computing paradigm}
 To start with distributed computing, we have to look for a suitable distributed computing paradigm that allows our system to be deployed from the cloud without much manual intervention, yet is able to do what we require it to do. There are several options, such as:
 \begin{enumerate}
@@ -51,40 +47,19 @@ To start with distributed computing, we have to look for a suitable distributed 
     \item Remote Procedure Call (RPC)\cite{RPC}
     \item Shared Memory Model\cite{SMM}
     \item The Actor Model\cite{ActorModel}
-    \item Publish/Subscribe (Pub/Sub)\cite{PubSub}
 \end{enumerate}
-While each paradigm has their strengths and drawbacks, we will be using the Actor Model. Primarily because its modularity. Each actor encapsulates its state and behavior, which makes it a prime candidate to encapsulate the behavior of the parts that process certain parts of data. This allows us to easily move part of the data processing pipeline from one device to another. Which helps with our goal of declaring where which data gets processed. Interestingly, it can also encapsulate the behavior of IoT devices, which according to \cite{differentnetworkneedsiot} will account for 50\% of all networked devices by 2023. Seeing as IoT devices are becoming increasingly important, they should be a factor in our choice of distributed computing paradigm.
+While each paradigm has their strengths and drawbacks, we will be using the Actor Model. An Actor is a computational unit which encapsulates its state and behavior, interacting with each other through asynchronous message passing. Each Actor has a mailbox, in which it receives these messages and processes them sequentially. Because of the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
 
-While it is technically possible to achieve modularity in MPI, RPC, and the Shared Memory Model, due to the tight coupling of those models, it is harder to achieve. This is because the state and behavior of the system are not encapsulated in a single entity, but rather spread across the entire system. This makes it harder to move parts of the system around. The Pub/Sub model is also a good candidate, however, it is more suited for event-driven systems, rather than systems with direct communication.
+The encapsulation property of the Actor Model allows Actors to be very modular, as we can see each Actor as a separate unit that processes part of the data. More concretely, each actor will be responsible for processing a single part of the data. This allows us to easily move parts of the data processing pipeline from one device to another. This is important because we want to be able to change where which data gets processed without much manual intervention. Using an IoT system as a running example because IoT devices account for 50\% of networked device\cite{differentnetworkneedsiot}. It is possible to encapsulate the behavior of each sensor in an Actor, connect this with another Actor responsible for sending it to a server where the data gets sent through a series of Actors that are each in turn responsible for processing a single part of the data. 
+% TODO: add diagram?
+Conceptually we should be able to move some of the Actors that process data from the pipeline to the IoT devices and place them before the the Actor that sends the data to the Server. Achieving one of the possible configurations discussed in the introduction, without having to reprogram the entire system.
+% TODO: add another diagram? 
 
-Other than the modularity, we also choose it for its maintainability. Since each part of the system is encapsulated in an Actor, we can easily change the behavior of parts of the system, instead of having to change our entire system. Another reason is scalability. We are able to distribute actors across different systems and machines. Which makes it perfect for moving parts of the data processing. Fault-tolerance makes it easier to contain errors and within individual actors and not propagate this to the entire system. The asynchronous nature of the Actor Model allows us to sparely use resources as needed, which will presumably reduce the required energy of the system, helping with the energy optimization. Lastly, through the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
-\subsection{Programming language of implementation}
-The next step is to choose a programming language that supports the Actor Model. However, before listing the programming languages that support the Actor model, we need to consider a few things first. We want our tool to be maintainable. This means that choosing a programming language that is popular and has a large community is important. Furthermore, when processing data, companies tend to analyze the data, and perform data science on it. This means that ideally we should choose a programming language that is also used in data science, so that users of Stork can stay in the same language. Lastly but more importantly, we should choose a programming language that has libraries or technologies that support the Actor Model. This is important because otherwise we have to make our own implementation of the Actor Model, which is not ideal, considering there are already several implementations available.
+While it is technically possible to achieve modularity in MPI, RPC, and the Shared Memory Model, due to the tight coupling of those models, it is harder to achieve. This is because the state and behavior of the system are not encapsulated in a single entity, but rather spread across the entire system. This makes it harder to move parts of the system around.
+\section{Stork}
+\section{Implementing Stork}
+\section{Conclusion}
 
-A quick google search yields the following programming languages that support the Actor Model:
-\begin{enumerate}
-    \item Scala with its Akka library
-    \item Java with its Akka library
-    \item Erlang, where the Actor Model is built into the language
-    \item Elixir, where the Actor model is built into the language, and based on Erlang, Open telecom platform (OTP)
-    \item JavaScript with its js.Actor library
-    \item Python with its Pykka and Thespianpy libraries
-    \item C\# with its Akka.NET library
-    \item Rust with its Actix library
-\end{enumerate}
-
-In terms of popularity, according to \cite{stackoverflowsurvey}, they are ranked as follows\footnote{TypeScript is emitted since it uses JavaScript libraries}:
-\begin{enumerate}
-    \item JavaScript
-    \item Python
-    \item Java
-    \item C\#
-    \item Rust
-    \item Scala
-    \item Elixir
-    \item Erlang
-\end{enumerate}
-With the last three being used by less than \(5\%\) of the respondents, and the top two being used by roughly \(49\%-63\%\) of respondents, we can focus on the top two. To stay in the same programming language that is often used by data scientists, we choose Python. This because according to, Python is the most popular language for data science, and while JavaScript is also used for data science, it does not offer nearly as much data science libraries as Python does.
 \subsection{Technologies and libraries}
 As mentioned when choosing the programming language of implementation, Python offers two Actor Model libraries. Pykka and Thespianpy. Setting Pykka and thespian next to each other and comparing them yields the following results:
 \subsubsection{Pykka}
