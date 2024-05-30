@@ -9,12 +9,41 @@
 % Some highly suggested packages, please read their manuals.
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\usepackage{xparse}
 \usepackage{cleveref}
 \usepackage[natbib, style=ieee]{biblatex}
 \usepackage{csquotes}
 \addbibresource{bibliography.bib}
 \setlength\parskip{\baselineskip}
+\definecolor{darkred}{rgb}{0.6,0.0,0.0}
+\definecolor{darkgreen}{rgb}{0,0.50,0}
+\definecolor{lightblue}{rgb}{0.0,0.42,0.91}
+\definecolor{orange}{rgb}{0.99,0.48,0.13}
+\definecolor{grass}{rgb}{0.18,0.80,0.18}
+\definecolor{pink}{rgb}{0.97,0.15,0.45}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+\lstdefinestyle{mystyle}{
+  basicstyle=\ttfamily,
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{green}\itshape,
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{red},
+  showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,
+}
+
+\lstset{language=Python, style=mystyle}
 \title{Delivering systems with Stork}
 \pretitle{\flushleft{Bachelor thesis submitted in partial fulfillment of the requirements for the degree of bachelor of science: Computer Science}}
 \subtitle{ A distributed computing deployment tool}
@@ -50,14 +79,72 @@ To start with distributed computing, we have to look for a suitable distributed 
 \end{enumerate}
 While each paradigm has their strengths and drawbacks, we will be using the Actor Model. An Actor is a computational unit which encapsulates its state and behavior, interacting with each other through asynchronous message passing. Each Actor has a mailbox, in which it receives these messages and processes them sequentially. Because of the message-based communication between Actors, we can easily decouple components, which in turn makes it easier to debug and test our systems. This is beneficial because distributed systems can quickly become very complex.
 
-The encapsulation property of the Actor Model allows Actors to be very modular, as we can see each Actor as a separate unit that processes part of the data. More concretely, each actor will be responsible for processing a single part of the data. This allows us to easily move parts of the data processing pipeline from one device to another. This is important because we want to be able to change where which data gets processed without much manual intervention. Using an IoT system as a running example because IoT devices account for 50\% of networked device\cite{differentnetworkneedsiot}. It is possible to encapsulate the behavior of each sensor in an Actor, connect this with another Actor responsible for sending it to a server where the data gets sent through a series of Actors that are each in turn responsible for processing a single part of the data. 
-% TODO: add diagram?
-Conceptually we should be able to move some of the Actors that process data from the pipeline to the IoT devices and place them before the the Actor that sends the data to the Server. Achieving one of the possible configurations discussed in the introduction, without having to reprogram the entire system.
-% TODO: add another diagram? 
-new diagram
-
+The encapsulation property of the Actor Model allows Actors to be very modular, as we can see each Actor as a separate unit that processes part of the data. More concretely, each actor will be responsible for processing a single part of the data. This allows us to easily move parts of the data processing pipeline from one device to another. This is important because we want to be able to change where which data gets processed without much manual intervention. Using an IoT system as a running example because IoT devices account for 50\% of networked device\cite{differentnetworkneedsiot}. It is possible to encapsulate the behavior of each sensor in an Actor, connect this with another Actor responsible for sending the data to a server where the data gets sent through a series of Actors that are each in turn responsible for processing a single part of the data, just like in figure \ref{fig:iotActorExample1}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{iotActorExample1.png}
+    \caption{An example of an IoT system using the Actor Model}
+    \label{fig:iotActorExample1}
+\end{figure}
+Conceptually we should be able to move some of the Actors that process data from the pipeline to the IoT devices and place them before the the Actor that sends the data to the Server, as depicted in figure \ref{fig:iotActorExample2}. Achieving one of the possible configurations discussed in the introduction, without having to reprogram the entire system.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{iotActorsMoved.png}
+    \caption{An example of an IoT system where some of the Actors that process data are moved to the IoT devices}
+    \label{fig:iotActorExample2}
+\end{figure}
 While it is technically possible to achieve modularity in MPI, RPC, and the Shared Memory Model, due to the tight coupling of those models, it is harder to achieve. This is because the state and behavior of the system are not encapsulated in a single entity, but rather spread across the entire system. This makes it harder to move parts of the system around.
+\subsection{Implementing Actors in Python}
+When using Stork to deploy distributed systems and trying out different configurations, we need to create Actors that can be deployed by Stork. However, before we can discuss how to use Stork, we need to discuss how to implement Actors in Python. Since Stork is built with Thespian, a Python Actor library, we will be using Thespian to implement our Actors. Consequently Stork only works with Thespian Actors. To create an Actor one must create a class that inherits from a Thespian Actor class. Furthermore this Actor must at least implement the \textit{\lstinline{receiveMessage}} method or equivalent, depending on the Actor class that is extended.
+\begin{lstlisting}[language=Python, caption=Actor example, label=lst:actor]
+from thespian.actors import Actor
+
+class HelloWorld(Actor):
+
+    def receiveMessage(self, message, sender):
+        if message == 'are you there?':
+            self.send(sender, 'Hello World! back')
+\end{lstlisting}
 \section{Stork}
+As mentioned in the introduction, Stork is a distributed computing deployment tool, written in Python that makes it possible to deploy distributed systems and try out different configurations regarding these systems. As perviously mentioned there are some implications when using Stork, as it is built on Thespian, a Python Actor library. This means that Stork only works with Thespian Actors. Stork provides the following features:
+\begin{enumerate}
+    \item Initializing the distributed system, allowing Actors to be spawned on the declared devices.
+    \item De-initializing the distributed system, removing all Actors from the declared devices.
+    \item Delivering an Actor class to the devices, allowing the Actor to be spawned on the device. This comes in two variants.
+\end{enumerate}
+\subsection{Initializing the distributed system}
+When the user of Stork wants to initialize the distributed system, the user has to declare which devices take part of the distributed system. More importantly, Stork needs to know from which of these devices the distributed system should be initialized. This is because Thespian requires a leader device, to which the other devices register themselves to. Stork in turn uses this leader device to keep track of the registered, or remote devices, and spawn Actors on the remote devices and the leader device. It is expected that the user uses this method prior to deploying the user defined Actors. Otherwise the user defined Actors cannot be spawned.
+\begin{lstlisting}[language=Python, caption=Initializing the distributed system, label=lst:init]
+import Stork
+
+if __name__ == "__main__":
+    devices = ["server@vub.ac.be","device1", "device2", "device3"]
+    Stork.distributeSystem(leader=devices[0], convention=devices)
+\end{lstlisting}
+It is expected that the user calls this method on the leader device, because it is expected that the leader device has access to the other devices.
+
+Alternatively, a user of Stork can instead of declaring the devices in a list, declare them in a dictionary with the keys as the host names and a list of properties as the value. This way the user can declare the capabilities of the devices, which can be used to spawn Actors on the devices that have the requested capabilities.
+\begin{lstlisting}[language=Python, caption=Initializing the distributed system with capabilities, label=lst:initcap]
+import Stork
+
+if __name__ == "__main__":
+    devices = {
+        "server@vub.ac.be" : ["server", "database"],
+        "device1" : ["sensor"],
+        "device2" : ["sensor"],
+        "device3" : ["sensor"]
+    }
+    Stork.distributeSystem(leader=devices.keys()[0], convention=devices)
+\end{lstlisting}
+Again, it is expected that the user calls this method on the leader device, because it is expected that the leader device has access to the other devices.
+\subsection{De-initializing the distributed system}
+De-initializing the distributed is the opposite of initializing the distributed system. This is necessary because when the user is done with the distributed system, all processes must be stopped. Since all processes of the Actors are running on the background on the devices declared when calling \lstinline{distributeSystem}, Stork creates a connection with the devices and runs a script to end all Actor related processes. Just like \lstinline{distributeSystem}, it is expected that the user calls this method on the leader device.
+\begin{lstlisting}[language=Python, caption=De-initializing the distributed system, label=lst:deinit]
+import Stork
+
+if __name__ == "__main__":
+    Stork.undistributeSystem()
+\end{lstlisting}
 \section{Implementing Stork}
 \section{Conclusion}
 
