@@ -22,14 +22,16 @@
 \definecolor{darkgreen}{rgb}{0,0.50,0}
 \definecolor{lightblue}{rgb}{0.0,0.42,0.91}
 \definecolor{orange}{rgb}{0.99,0.48,0.13}
-\definecolor{grass}{rgb}{0.18,0.80,0.18}
+\definecolor{grass}{rgb}{0.11, 0.53, 0.17}
 \definecolor{pink}{rgb}{0.97,0.15,0.45}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\newcommand{\secref}[1]{\autoref{#1}.}
 
 \lstdefinestyle{mystyle}{
   basicstyle=\ttfamily,
   backgroundcolor=\color{backcolour},   
-  commentstyle=\color{green}\itshape,
+  commentstyle=\color{darkgreen}\itshape,
   keywordstyle=\color{blue}\bfseries,
   stringstyle=\color{red},
   showspaces=false,                
@@ -70,6 +72,7 @@ Stork is a distributed computing deployment tool, written in Python that makes i
 \section{Background}
 Before we discuss Stork, we need to discuss the goals that Stork should achieve and how. As mentioned in the introduction, we require a tool that allows us to declare where which data gets processed. This means that we need to be able to deploy parts of our program to different devices. Consequently, this means that our tool needs to work in the context of distributed systems. For this we need to choose a distributed computing paradigm that allows us to deploy our system in a distributed way, as well as change where parts of our programs reside. Next, we need to look at the available technologies and libraries in Python and choose the one(s) that best fit our needs. Let us begin with the distributed computing paradigm.
 \subsection{Distributed computing paradigm}
+\label{sec:distributedcomputingparadigm}
 To start with distributed computing, we have to look for a suitable distributed computing paradigm that allows our system to be deployed from the cloud without much manual intervention, yet is able to do what we require it to do. There are several options, such as:
 \begin{enumerate}
     \item Message Passing Interface (MPI)\cite{MPI}
@@ -95,15 +98,15 @@ Conceptually we should be able to move some of the Actors that process data from
 \end{figure}
 While it is technically possible to achieve modularity in MPI, RPC, and the Shared Memory Model, due to the tight coupling of those models, it is harder to achieve. This is because the state and behavior of the system are not encapsulated in a single entity, but rather spread across the entire system. This makes it harder to move parts of the system around.
 \subsection{Implementing Actors in Python}
-When using Stork to deploy distributed systems and trying out different configurations, we need to create Actors that can be deployed by Stork. However, before we can discuss how to use Stork, we need to discuss how to implement Actors in Python. Since Stork is built with Thespian, a Python Actor library, we will be using Thespian to implement our Actors. Consequently Stork only works with Thespian Actors. To create an Actor one must create a class that inherits from a Thespian Actor class. Furthermore this Actor must at least implement the \textit{\lstinline{receiveMessage}} method or equivalent, depending on the Actor class that is extended.
+When using Stork to deploy distributed systems and trying out different configurations, we need to create Actors that can be deployed by Stork. However, before we can discuss how to use Stork, we need to discuss how to implement Actors in Python. Since Stork is built with Thespian, a Python Actor library, we will be using Thespian to implement our Actors. Consequently Stork only works with Thespian Actors. To create an Actor one must create a class that inherits from a Thespian Actor class. Furthermore this Actor must at least implement the \lstinline{receiveMessage} method or equivalent, depending on the Actor class that is extended. As mentioned in \secref{sec:distributedcomputingparadigm}, Actors communicate through asynchronous messaging. This means that when the Actor receives a message it will call the \lstinline{receiveMessage} method. An example of an Actor is given below
 \begin{lstlisting}[language=Python, caption=Actor example, label=lst:actor]
 from thespian.actors import Actor
 
 class HelloWorld(Actor):
 
     def receiveMessage(self, message, sender):
-        if message == 'are you there?':
-            self.send(sender, 'Hello World! back')
+        if message == "are you there?":
+            self.send(sender, "Hello World! back")
 \end{lstlisting}
 \section{Stork}
 As mentioned in the introduction, Stork is a distributed computing deployment tool, written in Python that makes it possible to deploy distributed systems and try out different configurations regarding these systems. As perviously mentioned there are some implications when using Stork, as it is built on Thespian, a Python Actor library. This means that Stork only works with Thespian Actors. Stork provides the following features:
@@ -118,7 +121,9 @@ When the user of Stork wants to initialize the distributed system, the user has 
 import Stork
 
 if __name__ == "__main__":
+    # First we declare a list of the host names of the devices that have to be part of our distributed system
     devices = ["server@vub.ac.be","device1", "device2", "device3"]
+    # Then we call the distributeSystem method, with the leader device being the first host name in the list of devices.
     Stork.distributeSystem(leader=devices[0], convention=devices)
 \end{lstlisting}
 It is expected that the user calls this method on the leader device, because it is expected that the leader device has access to the other devices.
@@ -128,6 +133,7 @@ Alternatively, a user of Stork can instead of declaring the devices in a list, d
 import Stork
 
 if __name__ == "__main__":
+    # Just like before we declare our devices, but this time in a dictionary with the host names as keys and the capabilities as values.
     devices = {
         "server@vub.ac.be" : ["server", "database"],
         "device1" : ["sensor"],
@@ -145,6 +151,32 @@ import Stork
 if __name__ == "__main__":
     Stork.undistributeSystem()
 \end{lstlisting}
+\subsection{Delivering an Actor class to the devices}
+Now that the methods to initialize and de-initialize the distributed system have been discussed, we can discuss how to distribute the Actors. Whenever the user wants to spawn an Actor on a device, the user can use two different methods to spawn the given Actor class. Stork provides two methods for this: \lstinline|deliverActor| and \lstinline|deliverOrActor|. However, these methods must be called within an Actor. This is because Stork uses the Actor to communicate internally, that an Actor must be spawned on a certain device.
+
+The \lstinline{deliverActor} method takes the Actor calling the method as an argument and a list of capabilities as a second argument. The list of capabilities is used to determine on which devices the Actor should be spawned. Taking a look at the example from listing \ref{lst:initcap}, if we want to spawn an actor on all the devices with the capability \enquote{sensor}, we can use \lstinline{Stork.deliverActor(self, ActorClass, ["sensor"])}. However, if we only want to spawn the Actor on one of the sensors, we can use \lstinline{Stork.deliverActor(self, ActorClass, ["device1"])}, or \lstinline{Stork.deliverActor(self, ActorClass, ["sensor", "device1"])}. Regardless, \lstinline{deliverActor} will spawn the Actor on all devices that have the all requested capabilities.
+\vfill
+\begin{lstlisting}[language=Python, caption=Delivering an Actor, label=lst:deliverActor]
+import Stork
+from thespian.actors import Actor
+
+class Pong(Actor):
+
+    def receiveMessage(self, message, sender):
+        self.send(sender, "pong")
+
+class Ping(Actor):
+
+    def receiveMessage(self, message, sender):
+        if message == "spawn":
+            Stork.deliverActor(self, Pong, ["sensor"])
+\end{lstlisting}
+
+Now that Stork spawned Actors on all the devices that have the \enquote{sensor} capability, how do we interact with them? As mentioned in \secref{sec:distributedcomputingparadigm}, Actors communicate through asynchronous messaging. In thespian this means that when a message is sent from an Actor to another Actor, it will never receive a return value. \lstinline|deliverActor| and \lstinline|deliverOrActor| are no exceptions to this rule, since they work in a similar manner. However, when an Actor sends a message to another Actor it can send a message back. Consequently, the user of Stork needs to extend the \lstinline|receiveMessage| method to handle the message that Stork sends to the Actor calling the delivery methods. This message contains the references to the Actors that have been spawned. Once the Ping Actor has the references it can interact with the spawned Actors in a similar manner as it would with other thespian Actors.
+
+Stork provides a Class to easily encapsulate the message that is sent to the Actor calling the delivery methods. This class is called \lstinline||
+
+
 \section{Implementing Stork}
 \section{Conclusion}
 
