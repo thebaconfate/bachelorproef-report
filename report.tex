@@ -16,6 +16,8 @@
 \usepackage{cleveref}
 \usepackage[natbib, style=ieee]{biblatex}
 \usepackage{csquotes}
+\usepackage{caption}
+\usepackage{subcaption}
 \addbibresource{bibliography.bib}
 \setlength\parskip{\baselineskip}
 \graphicspath{{./images}}
@@ -94,7 +96,7 @@ Using an IoT system as a running example because IoT devices account for 50\% of
     \caption{An example of an IoT system using the Actor Model}
     \label{fig:iotActorExample1}
 \end{figure}
-Conceptually, we should be able to spawn some of the Actors that process data from the pipeline to the IoT devices and place them before the Actor that sends the data to the Server. These Actors will pre-process data prior to sending it to the cloud, where the data will go through the rest of the pipeline. The preprocessing Actors that have been moved are coloured blue. Achieving one of the possible configurations without having redefined how the data gets processed.
+Conceptually, we should be able to spawn some of the Actors that process data from the pipeline to the IoT devices and place them before the Actor that sends the data to the Server. These Actors will pre-process data prior to sending it to the cloud, where the data will go through the rest of the pipeline. The preprocessing Actors that have been moved are coloured blue and green. Achieving one of the possible configurations without having redefined how the data gets processed.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{iotActorsMoved.png}
@@ -102,6 +104,7 @@ Conceptually, we should be able to spawn some of the Actors that process data fr
     \label{fig:iotActorExample2}
 \end{figure}
 \subsection{Implementing Actors in Python}
+\label{sec:implementingactors}
 When using Stork to deploy distributed systems and try out different configurations, Actors have to be created. However, before we can discuss how to use Stork, we discuss how to implement Actors in Python. In Python, there are two libraries that allow us to implement the Actor Model: Pykka\footnote{https://pykka.readthedocs.io/en/stable/} and Thespian\footnote{https://thespianpy.com/doc/}. Thespian is the only library that supports distribution and distributed communication out of the box, while Pykka does not. Because of this, Thespian is the library of choice for Stork, and consequently, Stork only works with Thespian Actors.
 
 To create an Actor, a class must inherit from a Thespian Actor class. Furthermore, this Actor must at least implement the \lstinline{receiveMessage} method or equivalent, depending on the Actor class that is extended. As mentioned in \secref{sec:distributedcomputingparadigm}, Actors communicate through asynchronous messaging. This means that when the Actor receives a message, it calls the \lstinline{receiveMessage} method. An example of an Actor implementation is given below. This Actor will respond with "Hello World! back" when it receives the message "are you there?".
@@ -115,146 +118,203 @@ class HelloWorld(Actor):
             self.send(sender, "Hello World! back")
 \end{lstlisting}
 \section{Stork}
-Stork is a distributed computing deployment tool, written in Python, that makes it possible to deploy an actor application over a distributed system in several different ways with minimum changes to the code. Stork provides the following features:
+Stork is a distributed computing deployment tool, written in Python, that makes it possible to deploy an actor application over a distributed system in several different ways with minimum changes to the code. More concretely, Stork is a library that automates Actor creation on remote devices. Currently a user has to either SSH to each device to create Actors on a device, or deal with the fact that an Actor class can be initialized on a single remote device, from the cloud. Stork works around having to manually SSH to each device to create Actors and allows the user to create multiple instances of an Actor class on different remote devices by delivering the Actor class to the requested devices and creating the Actor on the device.
+
+To illustrate the usage of Stork, we have the following example, which we will reuse throughout this section. The example consists of three remote devices and a server, which will be referred to as the leader of the distributed system. On the remote devices, data is generated. The goal of this system is to process a list of lists of integers. Out of each list of integers, the average is computed followed by the square of the average. Afterwards the data is stored on the database. As an initial configuration, where all the processing is done on the server we have the example depicted in Figure \ref{fig:config1}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{systemexample1.png}
+    \caption{An initial configuration where the entire pipeline is in the cloud.}
+    \label{fig:config1}
+\end{figure}
+Here the generator Actors send a list of integers to a Sender Actor, which' sole responsibility is to forward data to the Receiver Actor in the server. The Receiver Actor forwards the received data to the processing pipeline which consists of the Average Actor and the Square Actor. Each computing the average and the square of the average respectively. The processed data is then forwarded to the Database Actor, which stores it in the database.
+
+Another configuration is that the average is computed prior to the data being sent to the server. This means that the Average Actor would have to come before the Sender Actor on the remote devices. This configuration is depicted in Figure \ref{fig:config2}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{systemexample2.png}
+    \caption{A secondary configuration where the average is computed on the remote devices.}
+    \label{fig:config2}
+\end{figure}
+Apart from the fact that the average is now computed prior to it being sent to the server, the configuration stays the same.
+
+To try these different configurations, Stork stork provides the following features:
 \begin{enumerate}
-    \item Initializing the distributed system, allowing Actors to be spawned on the declared devices.
-    \item De-initializing the distributed system, removing all Actors from the declared devices.
-    \item Delivering an Actor class to the devices, allowing the Actor to be spawned on the device. This comes in two variants.
-    \item Fetching the references of Actors that have been spawned across the distributed system. This comes in three variants.
+    \item Initializing the distributed system, allowing Actors to be spawned.
+    \item De-initializing the distributed system, removing all Actors, and killing all processes related to Stork.
+    \item Delivering an Actor class to devices, allowing Actors to be spawned on devices. There are two variants: \lstinline{deliverActor} and \lstinline|deliverOrActor|.
+    \item Fetching the references of Actors that have been spawned across the distributed system. There are three variants: \lstinline|getActorAddress|, \lstinline|getActorClassAddresses| and \lstinline|getActorHostAddresses|.
     \item sending or broadcasting messages to the spawned Actors.
 \end{enumerate}
 \subsection{Initializing the distributed system}
-When the user of Stork wants to initialize the distributed system, the user has to declare which devices take part of the distributed system. More importantly, Stork needs to know from which of these devices the distributed system should be initialized. This is because Thespian requires a leader device, to which the other devices register themselves to. Stork in turn uses this leader device to keep track of the registered, or remote devices, and spawn Actors on the remote devices and the leader device. It is expected that the user uses this method prior to deploying the user defined Actors. Otherwise the user defined Actors cannot be spawned.
+Before creation of Actors is possible the distributed system has to be initialized. More concretely, Stork has to be present on all the devices to be able to create Actors remotely. This is because each device must have an ActorSystem running in the background to be able to create Actors. Furthermore Stork has to manage the creation and bookkeeping of Actors, and it cannot do so if the ActorSystems have not spun up before creating the Actors. To initialize the distributed system, the host names of all devices must be known and a leader of the system must be known.
+
+Stork starts by spinning up an ActorSystem on the leader device which then connects with the rest of the system from the leader device to spin up ActorSystems on the rest of the devices. Furthermore, the bookkeeping and creation of Actors is done from the leader device. This is because the leader device is the only device that has access to the rest of the remote devices upon initialization. As an example, using the system depicted in Figure \ref{fig:config1} and Figure \ref{fig:config2}, the initialization of the distributed system is shown in Listing \ref{lst:init}.
 \begin{lstlisting}[language=Python, caption=Initializing the distributed system, label=lst:init]
 import Stork
-
-if __name__ == "__main__":
-    # First we declare a list of the host names of the devices that have to be part of our distributed system
+    devices = ["server@vub.ac.be","device1", "device2", "device3"]
     devices = ["server@vub.ac.be","device1", "device2", "device3"]
     # Then we call the distributeSystem method, with the leader device being the first host name in the list of devices.
-    Stork.distributeSystem(leader=devices[0], convention=devices)
+devices = ["server@vub.ac.be","device1", "device2", "device3"]
+    # Then we call the distributeSystem method, with the leader device being the first host name in the list of devices.
+Stork.distributeSystem(leader=devices[0], convention=devices)
 \end{lstlisting}
-It is expected that the user calls this method on the leader device, because it is expected that the leader device has access to the other devices.
-
-Alternatively, a user of Stork can instead of declaring the devices in a list, declare them in a dictionary with the keys as the host names and a list of properties as the value. This way the user can declare the capabilities of the devices, which can be used to spawn Actors on the devices that have the requested capabilities.
-\begin{lstlisting}[language=Python, caption=Initializing the distributed system with capabilities, label=lst:initcap]
+When a user wants to assign certain roles to devices, Stork provides a way to do this during initialization of the distributed system. This is useful and helps the user spawn Actors on devices that have common responsibilities. More concretely, if two or more devices should have the same Actor, such as compute the average as in our example in Figure \ref{fig:config2}, the user can declare the devices in a dictionary with the keys as the host names and a list of roles that the device should have. This is shown in Listing \ref{lst:initcap}.
+\vfill
+\begin{lstlisting}[language=Python, caption=Initializing the distributed system with devices have common roles, label=lst:initcap]
 import Stork
-
-if __name__ == "__main__":
-    # Just like before we declare our devices, but this time in a dictionary with the host names as keys and the capabilities as values.
-    devices = {
-        "server@vub.ac.be" : ["server", "database"],
-        "device1" : ["sensor"],
-        "device2" : ["sensor"],
-        "device3" : ["sensor"]
-    }
-    Stork.distributeSystem(leader=devices.keys()[0], convention=devices)
+devices = {
+    "server@vub.ac.be" : ["server", "database"],
+    "device1" : ["generator", "sender"],
+    "device2" : ["generator", "sender"],
+    "device3" : ["generator", "sender"]
+}
+Stork.distributeSystem(leader=devices.keys()[0], convention=devices)
 \end{lstlisting}
-Again, it is expected that the user calls this method on the leader device, because it is expected that the leader device has access to the other devices.
+In Listing \ref{lst:initcap} the devices 1, 2 and 3 share the generator and sender roles, as they each have an instance of the Generator and Sender Actors in the configuration of Figure \ref{fig:config1}. Note that the host name is automatically added to the list of roles that each device has.
 \subsection{De-initializing the distributed system}
-De-initializing the distributed is the opposite of initializing the distributed system. This is necessary because when the user is done with the distributed system, all processes must be stopped. Since all processes of the Actors are running on the background on the devices declared when calling \lstinline{distributeSystem}, Stork creates a connection with the devices and runs a script to end all Actor related processes. Just like \lstinline{distributeSystem}, it is expected that the user calls this method on the leader device.
+Whenever a user wants to stop the distributed system, or if the user wants to change the configuration of the distributed system. For example when going from the configuration of Figure \ref{fig:config1} to the configuration of Figure \ref{fig:config2}, the distributed system must be de-initialized and re-initialized. To de-initialize the distributed system, Stork provides a method called \lstinline{undistributeSystem}. This method kills all Stork processes (including ActorSystems) on the devices. Like with the initialization method, it expects a list of the host names of the devices that are part of the distributed system and the leader of the distributed system. Again because it creates a connection from the leader device to the rest of the devices to kill the processes there first, and ends by killing the process on the leader device. Usage is shown in Listing \ref{lst:deinit}.
 \begin{lstlisting}[language=Python, caption=De-initializing the distributed system, label=lst:deinit]
 import Stork
-
-if __name__ == "__main__":
-    Stork.undistributeSystem()
+devices = [ "server@vub.ac.be" ,"device1" , "device2" , "device3"]
+Stork.undistributeSystem(leader=devices[0], convention=devices)
 \end{lstlisting}
 \subsection{Delivering an Actor class to the devices}
-Now that the methods to initialize and de-initialize the distributed system have been discussed, we can discuss how to distribute the Actors. Whenever the user wants to spawn an Actor on a device, the user can use two different methods to spawn the given Actor class. Stork provides two methods for this: \lstinline|deliverActor| and \lstinline|deliverOrActor|. However, these methods must be called within an Actor. This is because Stork uses the Actor to communicate internally, that an Actor must be spawned on a certain device.
+Now that the methods to initialize and de-initialize the distributed system have been discussed, we can discuss how to distribute the Actors. When deploying the distributed system, or more concretely, creating the Actors and connecting them, the user must be able to spawn Actors on different devices, from the cloud. Otherwise the user would have to manually create the Actors on the devices and connect them. Which, again is not scalable. For this purpose Stork provides the following two methods: \lstinline|deliverActor| and \lstinline|deliverOrActor|. However, these methods must be called within an Actor. This is because Stork uses the Actors to communicate internally, that an Actor must be spawned on a certain device. This is a limitation of Thespian, however this is further discussed in \secref{sec:creatinganddeliveringactors}. First we discuss \lstinline|deliverActor| and \lstinline|deliverOrActor|.
 
-The \lstinline{deliverActor} method takes the Actor calling the method as an argument and a list of capabilities as a second argument. The list of capabilities is used to determine on which devices the Actor should be spawned. Taking a look at the example from listing \ref{lst:initcap}, if we want to spawn an actor on all the devices with the capability \enquote{sensor}, we can use \lstinline{Stork.deliverActor(self, ActorClass, ["sensor"])}. However, if we only want to spawn the Actor on one of the sensors, we can use \lstinline{Stork.deliverActor(self, ActorClass, ["device1"])}, or \lstinline{Stork.deliverActor(self, ActorClass, ["sensor", "device1"])}. Regardless, \lstinline{deliverActor} will spawn the Actor on all devices that have the all requested capabilities.
-\vfill
-\begin{lstlisting}[language=Python, caption=Delivering an Actor, label=lst:deliverActor]
+In Listing \ref{lst:initcap} we discussed using roles to assign common responsibilities to devices. This will be helpful when creating Actors because it uses the roles to determine on which devices the Actor should be spawned. As a limited example, using the system depicted in Figure \ref{fig:config1}, we can create the GeneratorActor using the common "generator" role. However, since we are creating these Actors from the cloud, and the method can only be called from within an Actor, we need to create another Actor that will be responsible for spawning the Generator Actors on the devices. For the following example, the responsibility of spawning the Generator Actors will be given to the GeneratorSpawner Actor.
+
+Note that all Actors still need to implement the \lstinline{receiveMessage} method, as discussed in \secref{sec:implementingactors} even if it is empty. This is because Thespian requires it. \lstinline|deliverActor| and \lstinline|deliverOrActor| takes the actor calling the method as a first argument as well as the class of actor that must be created and a list of roles. Here is where \lstinline|deliverActor| and \lstinline|deliverOrActor| differ. \lstinline|deliverActor| checks if a device has all the roles in the list, while \lstinline|deliverOrActor| checks if the device has at least one of the roles in the list.
+\begin{lstlisting}[language=Python, caption=Delivering Actors, label=lst:deliverActor]
 import Stork
 from thespian.actors import Actor
 
-class Pong(Actor):
+class GeneratorActor(Actor):
 
     def receiveMessage(self, message, sender):
-        self.send(sender, "pong")
+        # generate data and send it to the sender actor
 
-class Ping(Actor):
+class GeneratorSpawner(Actor):
 
     def receiveMessage(self, message, sender):
         if message == "spawn":
-            Stork.deliverActor(self, Pong, ["sensor"])
+            Stork.deliverActor(self, GeneratorActor, ["generator"])
+
 \end{lstlisting}
+Note that the delivery method is triggered when the spawner receives the "spawn" message. This is necessary because of another limitation of thespian, where methods making use of the asynchronous message passing cannot be called during initialization of the actor. Only after, which means that a user has to create the spawner and send "spawn" to it after it is initialized.
 
-Now that Stork spawned Actors on all the devices that have the \enquote{sensor} capability, how does a user of Stork interact with them? As mentioned in \secref{sec:distributedcomputingparadigm}, Actors communicate through asynchronous messaging. In Thespian and therefore Stork, this means that when a message is sent from an Actor to another Actor, it will never receive a return value. \lstinline|deliverActor| and \lstinline|deliverOrActor| are no exceptions to this rule, since they work in a similar manner. However, when an Actor sends a message to another Actor it can send a message back. Consequently, the user of Stork needs to extend the \lstinline|receiveMessage| method to handle the message that Stork sends to the Actor calling the delivery methods. This message contains the references to the Actors that have been spawned, as well as the hostname of the device where the Actors were spawned. Once the Ping Actor has the references of the Pong Actors it can interact with the Pong Actors in a similar manner as it would with other thespian Actors.
+The example in Listing \ref{lst:deliverActor} will create Generator Actors on all devices that have the "generator" role. More concretely, there will be Generator Actors on devices 1, 2 and 3 but not the cloud. If the example used \lstinline|Stork.deliverOrActor(self, GeneratorActor, ["device1", "device2", "device3"])| instead, the result would have been the same. This is because each device has at least one of the roles in the list, and as previously mentioned, the host names are automatically added to the roles of the device.
 
-For this purpose, Stork also provides a class to easily encapsulate the message that is sent to the Actor that called the delivery methods. This class is called \lstinline|DeliveredActors|. The \lstinline|DeliveredActors| class understands the following methods:
+How does a user of Stork interact with the created Actors? Whenever the delivery methods are called, Stork creates references to the created Actors and sends these references back to the actor that called the method. However, these references will be wrapped in a class called \lstinline|DeliveredActors| which not only contains the references of the created Actors but also other metadata, such as the host name of where the actor was created and the class of the actor. Since this is received as a message, the actor that called the delivery method has to handle the message in \lstinline|receiveMessage|. However, prior to showing an example, we discuss what can be done with the \lstinline|DeliveredActors| class, as it does provide some useful methods to interact with the created Actors.
+
+Whenever a user wants to send a message to the created Actors, there are a few options of doing so. A message can be sent to a single actor, depending on its location, or more concretely host name, and class. For this the method \lstinline|emit| exists. However, if a message is meant to be sent to multiple Actors, broadcasting a message is a better solution. Depending on if a message has to be broadcasted to a specific device or to all the Actors, \lstinline|broadcast| or \lstinline|broadcastHost| can be used, respectively. If a reference to an actor needs to be saved for later use, or if the previous methods are not sufficient, it is best to unpack the class through \lstinline|unpackActors|, which returns a dictionary of the references, including the metadata. The structure is shown below in Listing \ref{lst:unpack}
 \begin{enumerate}
-    \item \lstinline{unpackActors()}: This method returns a dictionary with the host names of the devices as keys and another dictionary as value. The dictionary as value has the spawned Actor class as keys and the reference as value. This way we can address the Actor not only by the device that it is on but also by the class. Using the example from listing \ref{lst:deliverActor}, the dictionary would look like this:
-          \begin{lstlisting}[language=Python]
-{
-    "device1": { Pong: reference_to_Pong },
-    "device2": { Pong: reference_to_Pong },
-    "device3": { Pong: reference_to_Pong }
-}
-    \end{lstlisting}
     \item \lstinline{emit(self: Actor, host: str, Actorclass: Actor, message: Any)}: This method sends a message to the Actor that was spawned on the device with the given host name.
     \item \lstinline{broadcastHost(self: Actor, host: str, message: Any)}: This method sends a message to all the Actors that were spawned on the device with the given host name.
     \item \lstinline{broadcast(self: Actor, message: Any)}: This method sends a message to all the Actors that were spawned.
+    \item \lstinline{unpackActors()}: This method returns a dictionary with the host names of the devices as keys and a list as value. The list as value contains dictionaries of the spawned Actor class as keys and the reference as value. This way we can address the Actor not only by the device that it is on but also by the class. Using the example from listing \ref{lst:deliverActor}, unpacking the class sent to the caller of the delivery method would look as follows:
+          \begin{lstlisting}[language=Python, caption=lst:Unpacking structure ,label=lst:unpack]
+{
+"device1": [{ GeneratorActor: reference_to_GeneratorActor }],
+"device2": [{ GeneratorActor: reference_to_GeneratorActor }],
+"device3": [{ GeneratorActor: reference_to_GeneratorActor }]
+}
+    \end{lstlisting}
 \end{enumerate}
-As with the \lstinline|deliverActor| method, the \lstinline|DeliveredActors| class must be used within an Actor. This is because the \lstinline|DeliveredActors| class uses the Actor to send messages to other Actors.
-
-\begin{lstlisting}[language=Python, caption=Receiving the references of the spawned Actors and broadcasting "ping", label=lst:receive]
+As with the \lstinline|deliverActor| method, the \lstinline|DeliveredActors| class must be used within an Actor. This is because the \lstinline|DeliveredActors| class uses the Actor to send messages to other Actors. Extending the example from Listing \ref{lst:deliverActor} the next example will show a sample usage of the \lstinline|DeliveredActors| class, and broadcast to all GeneratorActors to create a SenderActor on their device. The message that triggers the creation of the Sender Actor is wrapped in a class that contains the hostname of the device where the GeneratorActor should create the SenderActor
+\vfill
+\begin{lstlisting}[language=Python, caption=Receiving the references of the spawned Actors and broadcasting CreateSendActor, label=lst:receive]
 import Stork
 from thespian.actors import Actor
 
-class Pong(Actor):
+class GeneratorActor(Actor):
 
     def receiveMessage(self, message, sender):
-        self.send(sender, "pong")
+        if isinstance(message, CreateSenderActor):
+            stork.deliverActor(self, SenderActor, [message.device])
 
-class Ping(Actor):
+class SenderActor(Actor):
+
+    def receiveMessage(self, message, sender):
+        # forward message to the cloud
+
+class SpawnerActor(Actor):
 
     def receiveMessage(self, message, sender):
         if message == "spawn":
-            Stork.deliverActor(self, Pong, ["sensor"])
+            Stork.deliverActor(self, ReceiverActor, ["server"])
+            Stork.deliverActor(self, GeneratorActor, ["generator"])
         elif isinstance(message, Stork.DeliveredActors):
-            message.broadcast("ping")
-        
+            unpacked = message.unpackActors()
+            for device, v in unpacked:
+                message.broadcastHost(self, device, CreateSenderActor(device))
 \end{lstlisting}
-
-The \lstinline{deliverOrActor} method works in a similar way as the \lstinline{deliverActor} method. The difference lies in the way the capabilities are checked. With \lstinline|deliverActor| the device must have all specified capabilities. With \lstinline|deliverOrActor| it suffices that the device has one of the required capabilities. Other than that it works in the same way as \lstinline|deliverActor|. It will also send a message to the Actor that called the method, containing the references to the spawned Actors in the \lstinline|DeliveredActors| class.
-
-Sometimes however, an Actor is already created and a reference of said Actor is needed to communicate with it. Stork provides three methods for this. The first one only gets the address of a single Actor class of a specific device. This can be done with \lstinline|Stork.getActorAddress| which expects the Actor calling it as first argument, the host name of the device we want to get the reference of, and the class of the Actor that we want to get a reference of. Essentially the same as the \lstinline|DeliveredActors.emit| method but without the message parameter.
+Noticeably, in the example the generators are created first, then the senders. But what if the ReceiverActor from Figure \ref{fig:config1} is created before the generators and the senders are created? In this case Stork provides methods to fetch the address of an existing actor. This can be done with \lstinline|Stork.getActorAddress| which expects the Actor calling it as first argument, the host name of the device we want to get the reference of, and the class of the Actor that we want to get a reference of. Essentially the same as the \lstinline|DeliveredActors.emit| method but without the message parameter.
 
 The second method is \lstinline|Stork.getActorClassAddresses| which works similarly to \lstinline|DeliveredActors.broadcastHost|. However instead of the hostname it expects a class. More concretely, it expects the Actor calling it as the first argument and the Actor class of which we want to get addresses as the second argument. \lstinline|Stork.getActorClassAddresses| gets all the addresses of the Actors of a specific class.
 
-Thirdly and lastly there is \lstinline|Stork.getActorHostAddresses| which works similarly to \lstinline|DeliveredActors.broadcastHost|, but without the message parameter. It expects the Actor calling it as the first argument and the host name of the device of which we want to get the references of the Actors as the second argument. \lstinline|Stork.getActorHostAddresses| gets all the addresses of the Actors on a specific device.
+Thirdly there is \lstinline|Stork.getActorHostAddresses| which works similarly to \lstinline|DeliveredActors.broadcastHost|, but without the message parameter. It expects the Actor calling it as the first argument and the host name of the device of which we want to get the references of the Actors as the second argument. \lstinline|Stork.getActorHostAddresses| gets all the addresses of the Actors on a specific device.
 
 Just like in \ref{lst:deliverActor} the response has to be handled in the \lstinline{receiveMessage} method. For these methods Stork provides another class, to differentiate it from the \lstinline|DeliveredActors| class. This class is called \lstinline|ActorAddresses| and has the same methods as \lstinline|DeliveredActors|.
+Extending Listing \ref{lst:receive} we have the following example usage, where the ReceiverActor is created before the generators and senders. This means that the sender has to get the reference of the receiver.
+\begin{lstlisting}[language=Python, caption=Fetching an actor address, label=lst:fetch]
+    import Stork
+    from thespian.actors import Actor
+    
+    class GeneratorActor(Actor):
+    
+        def receiveMessage(self, message, sender):
+            if isinstance(message, CreateSenderActor):
+                stork.deliverActor(self, SenderActor, [message.device])
+            if isintance(message, DeliveredActors):
+                message.broadcast("fetch receiver")
+    
+    class SenderActor(Actor):
+    
+        def receiveMessage(self, message, sender):
+            if message = "fetch receiver":
+                stork.getActorAddress(self, "server@vub.ac.be", ReceiverActor)
+            if isinstance(message, ActorAddresses):
+                receiver = message
+            else: 
+                # forward message to receiver
+
+    class ReceiverActor(Actor):
+        
+        def receiveMessage(self, message, sender):
+            # forward message to averageActor
+
+    
+    class SpawnerActor(Actor):
+    
+        def receiveMessage(self, message, sender):
+            if message == "spawn":
+                Stork.deliverActor(self, GeneratorActor, ["generator"])
+            elif isinstance(message, Stork.DeliveredActors):
+                if isintance(next(iter(next(iter(refs.values()))[0].keys())), GeneratorActor):
+                    # checks if the DeliveredActors is a result from generating the generators
+                    for device, _ in message.unpackActors():
+                        message.broadcastHost(self, device, CreateSenderActor(device))
+                        
+    \end{lstlisting}
+
+Till now we have worked with the examples from the initial configuration as depicted in Figure \ref{fig:config1}. However to try the configuration from Figure \ref{fig:config2} the user needs to add "average" to the list of roles of the devices 1, 2 and 3. Change the linkage by for example changing which actors create which other actors. More concretely, change the generator to create the AverageActors instead of the SenderActors, which also means that now the AverageActors need to create the SenderActors. Furthermore the receiver Actors should now forward the data to the SquareActors. After changing the linkage and the roles that each device has. It suffices to re-initialize the distributed system and spawn the actors again and the new configuration is ready to be tested.
+
 \section{Implementing Stork}
-Now that we have discussed the features that Stork provides, we can discuss how it is implemented. As previously mentioned, Stork is built on Thespian, a Python Actor library. This means that most features that Stork provides are built on Thespian. But, perhaps it is worth discussing why Thespian, and not another Python Actor library, as there is another one called Pykka.
-
-Pykka is a Python implementation of the Actor Model. It introduces some simple rules to control the sharing of state and cooperation between execution units, which makes it easier to build concurrent applications\footnote{https://pykka.readthedocs.io/en/stable/}. However, Pykka does not support distributed communication out of the box, like Thespian does. This is important since we we want to build a distributed system. Consequently, we choose Thespian over Pykka.
-
 Before discussing the implementation of Stork there are a few things that must be discussed about Thespian. When creating Actors it must be done within an ActorSystem. Meaning that on every device, on which we want to create an Actor, an ActorSystem must be present. This is because the ActorSystem manages the Actors and their communication. Consequently this means that an active ActorSystem is required on each device before we can create an Actor. This can be done by running a small script that creates an ActorSystem, nothing more, since the ActorSystem will be running in the background. This means we need to SSH to all devices and run the script on each device. For a small amount of devices this probably will not be an issue if it has to be done once or twice. However, when the distributed system is large, or the deployment is repetitive, it will be very taxing to the deployer, since it is a lot of repetitive manual work.
 
 \subsection{Automating the deployment of ActorSystems}
-For this we require to implement a program that automatically SSH's to the all devices of the distributed system and runs the script to create an ActorSystem. However, the order is important. Thespian calls these distributed systems \enquote{a convention}. Each convention must have a convention leader, to which the other ActorSystems register themselves to.
-To automate this, we need a library or technology that serves as infrastructure as code (IaC). The options are:
-\begin{enumerate}
-    \item Ansible
-    \item Fabric
-    \item Chef
-    \item Puppet
-    \item Terraform
-\end{enumerate}
-Most of these IaC tools are quite heavyweight and would require us to learn another language. Fabric however is a Python library that allows the user to create SSH connections and run commands on remote devices. This is perfect for our use case, as we are using Python to create the script that creates the ActorSystem, and thus allows us to stay in the same language. Consequently, we can use Fabric to automate the creation of the ActorSystems on the devices.
-
-There is still one issue though, when using Fabric to create a SSH connection and running a command, it expects that the process returns. It does so because it expects the command to be a foreground process. However, when creating an ActorSystem, as this starts a background process, it never returns. This is circumvented by using \enquote{tmux} before executing the program to start the ActorSystem. This ensures that the process is running in the background and the command returns. This is also how the \lstinline|Stork.distributeSystem| works, as it uses Fabric to create the ActorSystems on the devices. The \lstinline|Stork.undistributeSystem| method works in a similar way, as it uses Fabric to stop the ActorSystems on the devices. This is done by running a script that stops the ActorSystem on the devices. This script is also run in a \enquote{tmux} session, to ensure that the command returns. Essentially, both Stork methods call methods implemented for Fabric that create a SSH connection to the devices and run a command, that runs the initialization or de-initialization script. Hence the importance that this is done from the leader device.
+To automate this, we introduce Fabric, a python library that allows us to create connections with remote devices. There is still one issue though, when using Fabric to create a connection and running a command, it expects that the process returns. It does so because it expects the command to be a foreground process. However, when creating an ActorSystem, as this starts a background process, it never returns. This is circumvented by using \enquote{tmux} before executing the program to start the ActorSystem. This ensures that the process is running in the background and the command returns. This is also how the \lstinline|Stork.distributeSystem| works, as it uses Fabric to create the ActorSystems on the devices. The \lstinline|Stork.undistributeSystem| method works in a similar way, as it uses Fabric to stop the ActorSystems on the devices. This is done by running a script that stops the ActorSystem on the devices. This script is also run in a \enquote{tmux} session, to ensure that the command returns. Essentially, both Stork methods call methods implemented for Fabric that create a SSH connection to the devices and run a command, that runs the initialization or de-initialization script. Hence the importance that this is done from the leader device.
 
 \subsection{Creating and delivering Actors}
+\label{sec:creatinganddeliveringactors}
 The \lstinline|Stork.deliverActor| and \lstinline|Stork.deliverOrActor| methods work in a different manner, though they do make use of the ActorSystems that have been created by the \lstinline|Stork.distributeSystem| method. In Thespian there are two ways to create Actors. One through the ActorSystem and one through an Actor, meaning that Actors can create other Actors.
 This begs the question of how we can create Actors on remote devices? More specifically from the leader device, since we do not want to have to SSH to the remote devices to create Actors there. While Thespian does support a mechanism to restrict the creation of certain Actor classes to certain devices, there is no way to guarantee that the Actor is created on multiple different devices. This is because Thespian will always create an Actor on the first ActorSystem it can. Consequently, most of the times it will spawn the Actor on the same ActorSystem.
 Creating a remote Actor from the local ActorSystem is no good either, as it will either create it locally or, when using the Thespian mechanism, it will throw an error that it cannot create that Actor. This is because the mechanism only works when creating Actors from Actor, however, as mentioned before it does not work when the user wants to create an instance of an Actor on multiple devices.
 
 To work around this, we implement an administrative Actor that has to run on the leader device. As there is only one instance of the administrative Actor, we can use Thespians restriction mechanism to our advantage. This means that we can restrict the creation of the administrative Actor to the leader device. When running the scripts to initialize the ActorSystems on all devices, the script now also creates a reference to this administrative Actor. Meaning that all remote ActorSystems are now able to communicate with an administrative Actor on the leader device. However, this still does not guarantee that the references are all pointing to the same administrative Actor. Meaning that if two remote ActorSystem ask the administrative Actor for a reference to a certain Actor, they will likely not get the same response, because they will not be asking the same Actor. This is an issue. To work around this, Thespian provides another feature called the \enquote{global Actor}, which essentially gives the Actor a name, and thus now all remote ActorSystems referencing the administrative Actor will be referencing the same Actor. To prevent users of Stork having a name clash with the administrative Actor, the name is a generated hash.
 
-Now that we have an administrative Actor that can be referenced by all remote ActorSystems, we can use this Actor to fetch addresses as well as create Actors on the leader device. However, We cannot yet create Actors on remote ActorSystems. To achieve this, we create another administrative Actor, called a manager Actor, the manager Actor will be created on all remote ActorSystems. The only thing that the manager Actor does is, register itself with the administrative Actor, create Actors on the device it resides in, followed by returning the reference of the Actors it created to an aggregator Actor. The aggregator Actor is created by the administrative Actor to collect the references of the created Actors, as per the aggregator pattern \cite{aggregatorpattern}. The manager Actor registers itself to the administrative Actor by sending its reference to the administrative Actor, as well as the hostname of the device it resides in. This way the administrative Actor can ask the manager Actor to create an Actor on the device it resides in. The manager Actor then creates the Actor and forwards the reference to the aggregator Actor. When all the references are collected by the aggregator Actor, it sends the result back to the administrative Actor as well as to the Actor that requested the creation of the Actors. This way other Actors can ask the administrative Actor for the addresses of the Actors that were created on the remote devices, and the Actor that originally requested the creation of the Actors has the reference of the Actors that were created on the remote devices. As an example we can use the Ping and Pong Actor classes from listing \ref{lst:receive}
+Now that we have an administrative Actor that can be referenced by all remote ActorSystems, we can use this Actor to fetch addresses as well as create Actors on the leader device. However, We cannot yet create Actors on remote ActorSystems. To achieve this, we create another administrative Actor, called a manager Actor, the manager Actor will be created on all remote ActorSystems. The only thing that the manager Actor does is, register itself with the administrative Actor, create Actors on the device it resides in, followed by returning the reference of the Actors it created to an aggregator Actor. The aggregator Actor is created by the administrative Actor to collect the references of the created Actors, as per the aggregator pattern \cite{aggregatorpattern}. The manager Actor registers itself to the administrative Actor by sending its reference to the administrative Actor, as well as the hostname of the device it resides in. This way the administrative Actor can ask the manager Actor to create an Actor on the device it resides in. The manager Actor then creates the Actor and forwards the reference to the aggregator Actor. When all the references are collected by the aggregator Actor, it sends the result back to the administrative Actor as well as to the Actor that requested the creation of the Actors. This way other Actors can ask the administrative Actor for the addresses of the Actors that were created on the remote devices, and the Actor that originally requested the creation of the Actors has the reference of the Actors that were created on the remote devices. To illustrate this we have the following Actors: Ping and Pong, where the Ping Actor spawns a Pong Actor and sends it "ping", to which the pong actor replies with "pong".
 
 When a user wants to create a Pong actor on the device with the capability \enquote{sensor} from the Ping Actor which is on a remote device. The Ping Actor sends a request to the administrative Actor on the leader device to create a Pong Actor on all the devices with the \enquote{sensor} capability.
 \begin{figure}[H]
